@@ -87,5 +87,3 @@ The API currently reports a negative remaining balance if approved spending exce
 - This MVP uses a signed cookie session with an eight-hour expiry. For production, implement CSRF protection and account recovery, add tests, and conduct a security review before using actual financial data.
 - Public aggregate figures come from recorded ledger rows. They should not be represented as audited accounts unless the club has verified and approved them.
 
-## Deployment notes
-`server/.env` and `client/.env` are not committed. `client/.env.example` is optional and only needed when the API is hosted away from localhost.
