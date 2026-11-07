@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
-const { Pool } = pg; const pool = new Pool({connectionString:process.env.DATABASE_URL});
+const { Pool } = pg; const usingSupabaseUrl=Boolean(process.env.POSTGRES_URL&&!process.env.DATABASE_URL); const databaseUrl=process.env.DATABASE_URL||process.env.POSTGRES_URL; const connectionString=usingSupabaseUrl?databaseUrl.replace(/([?&])sslmode=[^&]*&?/,'$1').replace(/[?&]$/,''):databaseUrl; const pool = new Pool({connectionString,ssl:usingSupabaseUrl?{rejectUnauthorized:false}:undefined});
 try {
  const name=process.env.ADMIN_NAME||'WWCB Platform Admin'; const email=(process.env.ADMIN_EMAIL||'admin@wwcb.local').toLowerCase(); const password=process.env.ADMIN_PASSWORD;
  if(!password || password.length<12) throw new Error('Set ADMIN_PASSWORD (minimum 12 characters) in .env before seeding.');

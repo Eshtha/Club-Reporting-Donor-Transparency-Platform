@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express'; import cors from 'cors'; import helmet from 'helmet'; import cookieParser from 'cookie-parser'; import rateLimit from 'express-rate-limit'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import pg from 'pg'; import nodemailer from 'nodemailer'; import crypto from 'node:crypto'; import { z } from 'zod';
-const {Pool}=pg; const app=express(); const pool=new Pool({connectionString:process.env.DATABASE_URL});
-const PORT=Number(process.env.PORT||4000), JWT_SECRET=process.env.JWT_SECRET;
+const {Pool}=pg; const app=express(); const databaseUrl=process.env.DATABASE_URL||process.env.POSTGRES_URL; const usingSupabaseUrl=Boolean(process.env.POSTGRES_URL&&!process.env.DATABASE_URL); const connectionString=usingSupabaseUrl?databaseUrl.replace(/([?&])sslmode=[^&]*&?/,'$1').replace(/[?&]$/,''):databaseUrl; const pool=new Pool({connectionString,ssl:usingSupabaseUrl?{rejectUnauthorized:false}:undefined});
+const PORT=Number(process.env.PORT||4000), JWT_SECRET=process.env.JWT_SECRET||process.env.SUPABASE_JWT_SECRET;
 if(!JWT_SECRET||JWT_SECRET.length<32){console.error('JWT_SECRET must be at least 32 characters.');process.exit(1)}
 const mailer=process.env.SMTP_HOST?nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||587),secure:process.env.SMTP_SECURE==='true',auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASSWORD}}):null;
 const publicOrigin=()=>String(process.env.PUBLIC_APP_URL||process.env.CLIENT_ORIGIN||'http://localhost:5173').replace(/\/+$/,'');
@@ -9,7 +9,7 @@ const tokenHash=token=>crypto.createHash('sha256').update(token).digest('hex');
 async function sendMail(message){if(!mailer)throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASSWORD.');return mailer.sendMail({from:process.env.SMTP_FROM||process.env.SMTP_USER,...message})}
 async function issuePasswordToken(user,purpose='setup'){const raw=crypto.randomBytes(32).toString('hex');await pool.query('INSERT INTO password_reset_tokens(user_id,token_hash,purpose,expires_at) VALUES($1,$2,$3,NOW()+INTERVAL \'30 minutes\')',[user.id,tokenHash(raw),purpose]);return raw}
 const accountMail=(user,token,purpose)=>{const reset=`${publicOrigin()}/set-password?token=${encodeURIComponent(token)}`;return {to:user.email,subject:purpose==='setup'?'Your Rotaract WWCB account is ready':'Reset your Rotaract WWCB password',text:`Hello ${user.name},\n\nYour Rotaract WWCB Transparency Portal account uses ${user.email}.\n\nSet your password securely here (single-use link, expires in 30 minutes):\n${reset}\n\nThen sign in at ${publicOrigin()}.\n\nNever share this link. Rotaract WWCB Transparency Portal`}};
-app.use(helmet()); app.use(cors({origin:process.env.CLIENT_ORIGIN||'http://localhost:5173',credentials:true})); app.use(express.json({limit:'1mb'})); app.use(cookieParser());
+app.set('trust proxy',1); app.use(helmet()); app.use(cors({origin:process.env.CLIENT_ORIGIN||'http://localhost:5173',credentials:true})); app.use(express.json({limit:'1mb'})); app.use(cookieParser());
 app.use('/api/auth',rateLimit({windowMs:15*60*1000,limit:30,standardHeaders:true,legacyHeaders:false}));
 const asyncRoute=fn=>(req,res,next)=>Promise.resolve(fn(req,res,next)).catch(next);
 const safeUser=u=>({id:u.id,name:u.name,email:u.email,role:u.role});

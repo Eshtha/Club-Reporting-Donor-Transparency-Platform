@@ -5,7 +5,10 @@ import pg from 'pg';
 import { fileURLToPath } from 'node:url';
 const { Pool } = pg;
 const here = path.dirname(fileURLToPath(import.meta.url));
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const usingSupabaseUrl = Boolean(process.env.POSTGRES_URL && !process.env.DATABASE_URL);
+const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const connectionString = usingSupabaseUrl ? databaseUrl.replace(/([?&])sslmode=[^&]*&?/, '$1').replace(/[?&]$/, '') : databaseUrl;
+const pool = new Pool({ connectionString, ssl: usingSupabaseUrl ? { rejectUnauthorized: false } : undefined });
 try {
  await pool.query(fs.readFileSync(path.join(here,'schema.sql'),'utf8'));
  await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
