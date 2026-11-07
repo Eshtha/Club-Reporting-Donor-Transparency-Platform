@@ -1,7 +1,0 @@
-{
-  "name":"rotaract-wwcb-transparency-platform",
-  "private":true,
-  "version":"1.0.0",
-  "scripts":{"dev":"concurrently -n api,web -c magenta,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"","build":"npm run build --prefix client","start":"npm start --prefix server"},
-  "devDependencies":{"concurrently":"^9.1.2"}
-}
