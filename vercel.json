@@ -12,16 +12,12 @@
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": {
-        "service": "server"
-      }
+      "source": "/api/:path*",
+      "destination": "https://wwcb-platform.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
-      "destination": {
-        "service": "client"
-      }
+      "destination": "/index.html"
     }
   ]
 }
