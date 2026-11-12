@@ -9,15 +9,5 @@
       "root": "server",
       "framework": "express"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://wwcb-platform.onrender.com/api/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  }
 }
